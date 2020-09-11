@@ -30,15 +30,29 @@ int main(int argc, const char* argv[]) {
 
 	while (1) {
 		if (!display_exec_status) {
-			printf("\x1b[32m%s@%s:%s \x1b[0m> ", username, hostname, working_dir);	
+			printf("\x1b[32m%s@%s:%s \x1b[0m> ", 
+					username, 
+					hostname, 
+					working_dir);	
 		} else {
-			printf("\x1b[32m%s@%s: %s %s[%d] \x1b[0m> ", username, hostname, working_dir, exec_status != -1 ? "\x1b[36m" : "\x1b[31m", exec_status);	
+			printf("\x1b[32m%s@%s: %s %s[%d] \x1b[0m> ", 
+					username, 
+					hostname, 
+					working_dir, 
+					exec_status != -1 ? "\x1b[36m" : "\x1b[31m", exec_status);	
 		}
-		char* buffer = read_stdin();
 
-		if (string_eq(buffer, "myclear")) {
+		char* buffer = read_stdin();
+		char* token = strtok(buffer, " ");
+		
+		if (string_eq(token, "mydir")) {
+			char* dir = strtok(NULL, " ");
+			char formatted_string[4096];
+			sprintf(formatted_string, "ls -al %s", dir); 
+			system(formatted_string);
+		} else if (string_eq(token, "myclear")) {
 			exec_status = system("clear");
-		} else if (string_eq(buffer, "myenviron")) {
+		} else if (string_eq(token, "myenviron")) {
 			extern char **environ;
 			char* curr;
 
@@ -47,7 +61,9 @@ int main(int argc, const char* argv[]) {
 			}
 
 			printf("\n");
-		} else {
+		} else if (string_eq(token, "myquit")) {
+			return 0;
+		}  else {
 			exec_status = system(buffer);
 		}
 
@@ -75,17 +91,19 @@ static char* read_stdin(void) {
 }
 
 static char** tokenize(char* str, int* num_tokens) {
-	char buf[4096];
+	int token_index = 0;
 	char** tokens;
-	char current_char;
-	int current_token_len = 0;
+	char* token = strtok(str, " ");
 
-
-	for (int i = 0; (current_char = str[i]) != '\0'; i++) {
-		if (current_char == ' ') {
-			
-		} else {
-			current_token_len++;
-		}
+	while (token != NULL) {
+		token = strtok(NULL, " ");
+		tokens[token_index] = malloc(sizeof(char) * (sizeof(token) / sizeof(char)));
+		tokens[token_index] = token;
+		token_index++;
 	}
+
+	return tokens;
 }
+
+
+	
