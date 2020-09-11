@@ -1,24 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include <string.h>
+
+#define string_eq(str1, str2) strcmp(str1, str2) == 0
 
 static char* read_stdin(void);
-static char** tokenize(char* str);
+
 
 int main(int argc, const char* argv[]) {
-	char working_dir[] = "~ ";	
-	char username[100]; 
-	getlogin_r(username, 100);
+	char working_dir[] = "~ ";
+	char* user_env_name;
+	char* hostname_env_name;
+
+	//check if WSL
+	if (getenv("WSL_DISTRO_NAME") != NULL) {
+		user_env_name = "USER";
+		hostname_env_name = "NAME";	
+	} else {
+		printf("\x1b[31mYOU NEED TO SET THIS UP REMEMBER!!!");
+	}
+
+	char* username = getenv(user_env_name);
+	char* hostname = getenv(hostname_env_name);
+
+	bool display_exec_status = false;
+	int exec_status = 0;
 
 	while (1) {
-		printf("\x1b[32m%s@%s \x1b[0m> ", username, working_dir);	
+		if (!display_exec_status) {
+			printf("\x1b[32m%s@%s:%s \x1b[0m> ", username, hostname, working_dir);	
+		} else {
+			printf("\x1b[32m%s@%s: %s %s[%d] \x1b[0m> ", username, hostname, working_dir, exec_status != -1 ? "\x1b[36m" : "\x1b[31m", exec_status);	
+		}
 		char* buffer = read_stdin();
 
-		//stuff
+		if (string_eq(buffer, "myclear")) {
+			exec_status = system("clear");
+		} else if (string_eq(buffer, "myenviron")) {
+			extern char **environ;
+			char* curr;
 
-		free(buffer);
+			for (int i = 0; (curr = environ[i]) != NULL; i++) {
+				printf("%s\n", curr);
+			}
 
-							
+			printf("\n");
+		} else {
+			exec_status = system(buffer);
+		}
+
+		display_exec_status = true;
+		free(buffer);		
 	}
 	
 }
@@ -41,19 +75,17 @@ static char* read_stdin(void) {
 }
 
 static char** tokenize(char* str, int* num_tokens) {
-	char* tokens[];
-	char* token = strtok(str, " ");
-	int n = 0;
+	char buf[4096];
+	char** tokens;
+	char current_char;
+	int current_token_len = 0;
 
-	while (token != NULL) {
-		token = strtok(NULL, s);
 
-		if () {
+	for (int i = 0; (current_char = str[i]) != '\0'; i++) {
+		if (current_char == ' ') {
 			
+		} else {
+			current_token_len++;
 		}
-
-		n++;
 	}
-
-	&num_tokens = n;
 }
